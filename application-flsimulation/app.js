@@ -79,25 +79,24 @@ async function main() {
 				console.log(`*** unexpected return value:  ${result.toString()}`)
 			}
 			
-
 			//GET
 			console.log('\n--> Evaluate Transaction: Get, get value on position 1');
 			result = await contract.evaluateTransaction('get', 1);
 			console.log(`*** Result: ${result.toString()}`);
 
 			const rounds=3;			
-			var res;
 			
-			for (var i=0;i<rounds;i++){
+			
+			for (let i=0;i<rounds;i++){
 				console.log(`round: ${i}`)
 						//GET
 						console.log('\n--> Evaluate Transaction: Get, get value on position 1');
-						res = await contract.evaluateTransaction('get', 1);
-						console.log(`*** Got: ${res.toString()}`);
-
+						let tempres = await contract.evaluateTransaction('get', 1);
+						console.log(`*** Got: ${tempres.toString()}`);
+						
 						//HASH						
-						let next = hash(res);
-						console.log(`***** Hashing: The hash of  "${res}" is "${next}"`);
+						let next = hash(tempres);
+						console.log(`***** Hashing: The hash of  "${tempres}" is "${next}"`);
 						
 						//test, delete later - this works as expected
 						//u2 = hash(u);
@@ -106,13 +105,13 @@ async function main() {
 
 						// SET						
 						console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
-						res = await contract.submitTransaction('set', 1, next);
+						let tempres2 = await contract.submitTransaction('set', 1, next);
 						//console.log('*** Result: committed');
-						if (`${res}` !== '') {
-							if (`${res}`== next)
-							console.log(`*** successfully sumbitted: ${res.toString()}`);
+						if (`${tempres2}` !== '') {
+							if (`${tempres2}`== next)
+							console.log(`*** successfully sumbitted: ${tempres2.toString()}`);
 							else
-							console.log(`*** unexpected return value:  ${res.toString()}`)
+							console.log(`*** unexpected return value:  ${tempres2.toString()}`)
 						}
 											
 			}
