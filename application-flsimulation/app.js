@@ -70,7 +70,7 @@ async function main() {
 			// SET
 			var value = 'abcdefgah';
 			console.log('\n--> Submit Transaction: set, sets the value on position 1');
-			let result = await contract.submitTransaction('set', 1, value);
+			let result = await contract.submitTransaction('set', 2, value);
 			console.log('*** Result: committed');
 			if (`${result}` !== '') {
 				if (`${result}`== value)
@@ -81,7 +81,7 @@ async function main() {
 			
 			//GET
 			console.log('\n--> Evaluate Transaction: Get, get value on position 1');
-			result = await contract.evaluateTransaction('get', 1);
+			result = await contract.evaluateTransaction('get', 2);
 			console.log(`*** Result: ${result.toString()}`);
 
 			const rounds=3;			
@@ -91,7 +91,7 @@ async function main() {
 				console.log(`round: ${i}`)
 						//GET
 						console.log('\n--> Evaluate Transaction: Get, get value on position 1');
-						let tempres = await contract.evaluateTransaction('get', 1);
+						let tempres = await contract.evaluateTransaction('get', 2);
 						console.log(`*** Got: ${tempres.toString()}`);
 						
 						//HASH						
@@ -105,7 +105,7 @@ async function main() {
 
 						// SET						
 						console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
-						let tempres2 = await contract.submitTransaction('set', 1, next);
+						let tempres2 = await contract.submitTransaction('set', 2, next);
 						//console.log('*** Result: committed');
 						if (`${tempres2}` !== '') {
 							if (`${tempres2}`== next)
