@@ -17,7 +17,7 @@ const chaincodeName = 'basic';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
-const evaluate=[1,2];
+const evaluate=[1,2,3,4,5,8];
 const logging = false;
 
 
