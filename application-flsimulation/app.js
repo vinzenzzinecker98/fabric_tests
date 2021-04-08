@@ -5,6 +5,8 @@
 
 'use strict';
 var hash = require('crypto-js/sha256');
+var Stopwatch = require('statman-stopwatch');
+
 const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const path = require('path');
@@ -15,14 +17,16 @@ const chaincodeName = 'basic';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
+const rounds=3;
+const logging = false;
 
-function prettyJSONString(inputString) {
-	return JSON.stringify(JSON.parse(inputString), null, 2);
-}
+
+
 
 
 async function main() {
 	try {
+		var sw = new Stopwatch();
 		// build an in memory object with the network configuration (also known as a connection profile)
 		const ccp = buildCCPOrg1();
 
@@ -63,90 +67,55 @@ async function main() {
 			const contract = network.getContract(chaincodeName);
 
 
-			//test, delete later:
-			var u = hash("test");
-						console.log(`***** Test: The hash of  "test" is ${u}`)
 
 			// SET
 			var value = 'abcdefgah';
-			console.log('\n--> Submit Transaction: set, sets the value on position 1');
+			if(logging) console.log('\n--> Submit Transaction: set, sets the value on position 1');
 			let result = await contract.submitTransaction('set', 2, value);
-			console.log('*** Result: committed');
+			if(logging) console.log('*** Result: committed');
 			if (`${result}` !== '') {
 				if (`${result}`== value)
-				console.log(`*** successfully sumbitted: ${result.toString()}`);
+				if(logging) console.log(`*** successfully sumbitted: ${result.toString()}`);
 				else
-				console.log(`*** unexpected return value:  ${result.toString()}`)
+				if(logging) console.log(`*** unexpected return value:  ${result.toString()}`)
 			}
 			
 			//GET
-			console.log('\n--> Evaluate Transaction: Get, get value on position 1');
+			if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
 			result = await contract.evaluateTransaction('get', 2);
-			console.log(`*** Result: ${result.toString()}`);
+			if(logging) console.log(`*** Result: ${result.toString()}`);
 
-			const rounds=3;			
+						
 			
-			
+			sw.start();
+			console.log("Running...")
 			for (let i=0;i<rounds;i++){
-				console.log(`round: ${i}`)
-						//GET
-						console.log('\n--> Evaluate Transaction: Get, get value on position 1');
-						let tempres = await contract.evaluateTransaction('get', 2);
-						console.log(`*** Got: ${tempres.toString()}`);
+				if(logging) console.log(`round: ${i}`)
+					//GET
+					if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
+					let res = await contract.evaluateTransaction('get', 2);
+					if(logging) console.log(`*** Got: ${res.toString()}`);
+					
+					//HASH						
+					let next = hash(res.toString());                		
+					if(logging) console.log(`***** Hashing: The hash of  "${res.toString()}" is "${next}"`);
 						
-						//HASH						
-						let next = hash(tempres);
-						console.log(`***** Hashing: The hash of  "${tempres}" is "${next}"`);
-						
-						//test, delete later - this works as expected
-						//u2 = hash(u);
-						//console.log(`***** Test: The hash of  "${u}" is ${u2}`)
-						//u = u2;
 
-						// SET						
-						console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
-						let tempres2 = await contract.submitTransaction('set', 2, next);
-						//console.log('*** Result: committed');
-						if (`${tempres2}` !== '') {
-							if (`${tempres2}`== next)
-							console.log(`*** successfully sumbitted: ${tempres2.toString()}`);
-							else
-							console.log(`*** unexpected return value:  ${tempres2.toString()}`)
+					// SET						
+					if(logging) console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
+					let check = await contract.submitTransaction('set', 2, next);
+					//if(logging) console.log('*** Result: committed');
+					if (`${check}` !== '') {
+						if (`${check}`== next)
+						if(logging) console.log(`*** successfully sumbitted: ${check.toString()}`);
+						else
+						if(logging) console.log(`*** unexpected return value:  ${check.toString()}`)
 						}
 											
 			}
-/*
+
 			
-			console.log('\n--> Evaluate Transaction: AssetExists, function returns "true" if an asset with given assetID exist');
-			result = await contract.evaluateTransaction('AssetExists', 'asset1');
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
-
-			console.log('\n--> Submit Transaction: UpdateAsset asset1, change the appraisedValue to 350');
-			await contract.submitTransaction('UpdateAsset', 'asset1', 'blue', '5', 'Tomoko', '350');
-			console.log('*** Result: committed');
-
-			console.log('\n--> Evaluate Transaction: ReadAsset, function returns "asset1" attributes');
-			result = await contract.evaluateTransaction('ReadAsset', 'asset1');
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
-
-			try {
-				// How about we try a transactions where the executing chaincode throws an error
-				// Notice how the submitTransaction will throw an error containing the error thrown by the chaincode
-				console.log('\n--> Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error');
-				await contract.submitTransaction('UpdateAsset', 'asset70', 'blue', '5', 'Tomoko', '300');
-				console.log('******** FAILED to return an error');
-			} catch (error) {
-				console.log(`*** Successfully caught the error: \n    ${error}`);
-			}
-
-			console.log('\n--> Submit Transaction: TransferAsset asset1, transfer to new owner of Tom');
-			await contract.submitTransaction('TransferAsset', 'asset1', 'Tom');
-			console.log('*** Result: committed');
-
-			console.log('\n--> Evaluate Transaction: ReadAsset, function returns "asset1" attributes');
-			result = await contract.evaluateTransaction('ReadAsset', 'asset1');
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
-			*/
+			console.log(`Runtime with ${rounds} rounds: ${sw.read()} ms`);
 		} finally {
 			// Disconnect from the gateway when the application is closing
 			// This will close all connections to the network
@@ -165,12 +134,6 @@ main();
 //   and 2 certificate authorities
 //         ===> from directory /fabric-samples/test-network
 //         ./network.sh up createChannel -ca
-// - Use any of the asset-transfer-basic chaincodes deployed on the channel "mychannel"
-//   with the chaincode name of "basic". The following deploy command will package,
-//   install, approve, and commit the javascript chaincode, all the actions it takes
-//   to deploy a chaincode to a channel.
-//         ===> from directory /fabric-samples/test-network
-//         ./network.sh deployCC -ccn basic -ccp ../asset-transfer-basic/chaincode-javascript/ -ccl javascript
 // - Be sure that node.js is installed
 //         ===> from directory /fabric-samples/asset-transfer-basic/application-javascript
 //         node -v
@@ -198,12 +161,3 @@ main();
 // admin and application user are not valid. Deleting the wallet store will force these to be reset
 // with the new certificate authority.
 //
-
-/**
- *  A test application to show basic queries operations with any of the asset-transfer-basic chaincodes
- *   -- How to submit a transaction
- *   -- How to query and check the results
- *
- * To see the SDK workings, try setting the logging to show on the console before running
- *        export HFC_LOGGING='{"debug":"console"}'
- */

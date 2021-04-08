@@ -12,6 +12,8 @@
     "dependencies": {
         "crypto-js": "^4.0.0",
         "fabric-ca-client": "^2.2.4",
-        "fabric-network": "^2.2.4"
+        "fabric-network": "^2.2.4",
+        "statman": "^1.8.1",
+        "stopwatch-node": "^1.1.0"
     }
 }
