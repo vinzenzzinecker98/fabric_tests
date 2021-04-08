@@ -17,7 +17,7 @@ const chaincodeName = 'basic';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
-const rounds=3;
+const evaluate=[1,2];
 const logging = false;
 
 
@@ -26,7 +26,7 @@ const logging = false;
 
 async function main() {
 	try {
-		var sw = new Stopwatch();
+		
 		// build an in memory object with the network configuration (also known as a connection profile)
 		const ccp = buildCCPOrg1();
 
@@ -87,35 +87,39 @@ async function main() {
 
 						
 			
-			sw.start();
-			console.log("Running...")
-			for (let i=0;i<rounds;i++){
-				if(logging) console.log(`round: ${i}`)
-					//GET
-					if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
-					let res = await contract.evaluateTransaction('get', 2);
-					if(logging) console.log(`*** Got: ${res.toString()}`);
-					
-					//HASH						
-					let next = hash(res.toString());                		
-					if(logging) console.log(`***** Hashing: The hash of  "${res.toString()}" is "${next}"`);
-						
-
-					// SET						
-					if(logging) console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
-					let check = await contract.submitTransaction('set', 2, next);
-					//if(logging) console.log('*** Result: committed');
-					if (`${check}` !== '') {
-						if (`${check}`== next)
-						if(logging) console.log(`*** successfully sumbitted: ${check.toString()}`);
-						else
-						if(logging) console.log(`*** unexpected return value:  ${check.toString()}`)
-						}
-											
-			}
-
 			
+			for (let rounds of evaluate)
+			{
+				let sw = new Stopwatch(true);
+				console.log("Running...");
+				for (let i=0;i<rounds;i++){
+					if(logging) console.log(`round: ${i}`)
+						//GET
+						if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
+						let res = await contract.evaluateTransaction('get', 2);
+						if(logging) console.log(`*** Got: ${res.toString()}`);
+						
+						//HASH						
+						let next = hash(res.toString());                		
+						if(logging) console.log(`***** Hashing: The hash of  "${res.toString()}" is "${next}"`);
+							
+
+						// SET						
+						if(logging) console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
+						let check = await contract.submitTransaction('set', 2, next);
+						//if(logging) console.log('*** Result: committed');
+						if (`${check}` !== '') {
+							if (`${check}`== next)
+							if(logging) console.log(`*** successfully sumbitted: ${check.toString()}`);
+							else
+							if(logging) console.log(`*** unexpected return value:  ${check.toString()}`)
+							}
+												
+				}
+
+			sw.stop();
 			console.log(`Runtime with ${rounds} rounds: ${sw.read()} ms`);
+		}
 		} finally {
 			// Disconnect from the gateway when the application is closing
 			// This will close all connections to the network
