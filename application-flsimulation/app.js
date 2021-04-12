@@ -1,7 +1,4 @@
-/*
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 'use strict';
 var hash = require('crypto-js/sha256');
@@ -17,6 +14,8 @@ const chaincodeName = 'basic';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
+
+// provide here the different numbers of runs that you wand to evaluate, for example [1,10] to evaluate One round and then evaluate 10 rounds of training
 const evaluate=[1,2,3,4,5,8];
 const logging = false;
 
@@ -27,7 +26,7 @@ const logging = false;
 async function main() {
 	try {
 		
-		// build an in memory object with the network configuration (also known as a connection profile)
+		// build connection profile
 		const ccp = buildCCPOrg1();
 
 		// build an instance of the fabric ca services client based on
@@ -87,24 +86,25 @@ async function main() {
 
 						
 			
-			
+			//for each specified number of rounds
 			for (let rounds of evaluate)
 			{
 				let sw = new Stopwatch(true);
 				console.log("Running...");
+				//Run n times
 				for (let i=0;i<rounds;i++){
 					if(logging) console.log(`round: ${i}`)
-						//GET
+						//GET the value currently stored in the ledger
 						if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
 						let res = await contract.evaluateTransaction('get', 2);
 						if(logging) console.log(`*** Got: ${res.toString()}`);
 						
-						//HASH						
+						//HASH the retrieved value					
 						let next = hash(res.toString());                		
 						if(logging) console.log(`***** Hashing: The hash of  "${res.toString()}" is "${next}"`);
 							
 
-						// SET						
+						// SET the value on the ledger (this produces a transaction on the network)					
 						if(logging) console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
 						let check = await contract.submitTransaction('set', 2, next);
 						//if(logging) console.log('*** Result: committed');
@@ -136,16 +136,12 @@ main();
 // pre-requisites:
 // - fabric-sample two organization test-network setup with two peers, ordering service,
 //   and 2 certificate authorities
-//         ===> from directory /fabric-samples/test-network
 //         ./network.sh up createChannel -ca
 // - Be sure that node.js is installed
-//         ===> from directory /fabric-samples/asset-transfer-basic/application-javascript
 //         node -v
 // - npm installed code dependencies
-//         ===> from directory /fabric-samples/asset-transfer-basic/application-javascript
 //         npm install
 // - to run this test application
-//         ===> from directory /fabric-samples/asset-transfer-basic/application-javascript
 //         node app.js
 
 // NOTE: If you see  kind an error like these:
