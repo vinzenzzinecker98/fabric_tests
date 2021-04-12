@@ -1,11 +1,11 @@
-#simple testing for fabric network
+# simple testing for fabric network
 
-##startup:
+## startup:
 in `/fabric-samples/test-network`:
 `./network.sh up createChannel -c mychannel -ca`
 `./network.sh deployCC -ccn basic -ccp ../chaincode/flsimulation/ -ccl go`
 
 
-##run tests:
+## run tests:
 in `fabric-samples/application-flsimulation`:
 `node app.js`
