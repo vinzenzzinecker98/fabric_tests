@@ -10,7 +10,7 @@ install dependencies like instructed here: https://hyperledger-fabric.readthedoc
 
 ## start the test network:
 
-execute my startup script `bash initiate.sh` or run
+execute the startup script `bash initiate.sh` or run
 in `/test-network` the following commands:
 `./network.sh up createChannel -c mychannel -ca`
 `./network.sh deployCC -ccn basic -ccp ../chaincode/flsimulation/ -ccl go`
