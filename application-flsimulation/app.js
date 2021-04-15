@@ -10,6 +10,8 @@ const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../test-application/javascript/CAUtil.js');
 const { buildCCPOrg1, buildWallet } = require('../test-application/javascript/AppUtil.js');
 const channelName = 'mychannel';
+
+// important: here the provided chaincode name has to match the name given when deploying the chaincode (-ccn flag!)
 const chaincodeName = 'basic';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
@@ -26,26 +28,13 @@ const logging = false;
 async function main() {
 	try {
 		
-		// build connection profile
+		// build connection to the running Fabric network
 		const ccp = buildCCPOrg1();
-
-		// build an instance of the fabric ca services client based on
-		// the information in the network configuration
 		const caClient = buildCAClient(FabricCAServices, ccp, 'ca.org1.example.com');
-
-		// setup the wallet to hold the credentials of the application user
 		const wallet = await buildWallet(Wallets, walletPath);
-
-		// in a real application this would be done on an administrative flow, and only once
+    //register user to sign the transactions (Org1 is used, could also be Org2 obviously)
 		await enrollAdmin(caClient, wallet, mspOrg1);
-
-		// in a real application this would be done only when a new user was required to be added
-		// and would be part of an administrative flow
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1');
-
-		// Create a new gateway instance for interacting with the fabric network.
-		// In a real application this would be done as the backend server session is setup for
-		// a user that has been verified.
 		const gateway = new Gateway();
 
 		try {
@@ -66,10 +55,11 @@ async function main() {
 			const contract = network.getContract(chaincodeName);
 
 
-
-			// SET
+			//Start value for the simulation
 			var value = 'abcdefgah';
 			if(logging) console.log('\n--> Submit Transaction: set, sets the value on position 1');
+      
+      //store the start value in the ledger (I will always use position 2, can be any position, as long as it is always the same)
 			let result = await contract.submitTransaction('set', 2, value);
 			if(logging) console.log('*** Result: committed');
 			if (`${result}` !== '') {
@@ -79,7 +69,7 @@ async function main() {
 				if(logging) console.log(`*** unexpected return value:  ${result.toString()}`)
 			}
 			
-			//GET
+			//Check whether the value was successfully submitted
 			if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
 			result = await contract.evaluateTransaction('get', 2);
 			if(logging) console.log(`*** Result: ${result.toString()}`);
@@ -89,35 +79,37 @@ async function main() {
 			//for each specified number of rounds
 			for (let rounds of evaluate)
 			{
+     //start the time for the evaluation
 				let sw = new Stopwatch(true);
 				console.log("Running...");
-				//Run n times
+				//Run the specified amount of times
 				for (let i=0;i<rounds;i++){
-					if(logging) console.log(`round: ${i}`)
-						//GET the value currently stored in the ledger
+        
+					  if(logging) console.log(`round: ${i}`)
+                                              
+						//GET the value currently stored on the blockchain
 						if(logging) console.log('\n--> Evaluate Transaction: Get, get value on position 1');
 						let res = await contract.evaluateTransaction('get', 2);
 						if(logging) console.log(`*** Got: ${res.toString()}`);
 						
-						//HASH the retrieved value					
+						//HASH the retrieved value	using the CryptoJS Library				
 						let next = hash(res.toString());                		
 						if(logging) console.log(`***** Hashing: The hash of  "${res.toString()}" is "${next}"`);
 							
 
-						// SET the value on the ledger (this produces a transaction on the network)					
+						// SET the value on the ledger (this produces a transaction on the blockchain network)					
 						if(logging) console.log(`\n--> Submit Transaction: set, sets the value on position 1 to be ${next}`);
 						let check = await contract.submitTransaction('set', 2, next);
-						//if(logging) console.log('*** Result: committed');
 						if (`${check}` !== '') {
 							if (`${check}`== next)
 							if(logging) console.log(`*** successfully sumbitted: ${check.toString()}`);
 							else
 							if(logging) console.log(`*** unexpected return value:  ${check.toString()}`)
 							}
-												
 				}
-
+      //stop the timer
 			sw.stop();
+      //log the evaluated time to console
 			console.log(`Runtime with ${rounds} rounds: ${sw.read()} ms`);
 		}
 		} finally {

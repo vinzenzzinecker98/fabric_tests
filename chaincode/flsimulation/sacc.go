@@ -92,6 +92,6 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 // main function starts up the chaincode in the container during instantiate
 func main() {
 	if err := shim.Start(new(SimpleAsset)); err != nil {
-		fmt.Printf("Error starting SimpleAsset chaincode: %s", err)
+		fmt.Printf("Error starting chaincode: %s", err)
 	}
 }
